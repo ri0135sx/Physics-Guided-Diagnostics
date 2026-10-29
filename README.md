@@ -10,6 +10,7 @@ the significance test. The simulated dataset and the retrained checkpoints are
 **not** distributed (see [Scope](#scope)).
 
 ![Qualitative comparison (HINet)](docs/fig4_qualitative.png)
+
 *Fig. 4 of the paper (HINet). (A) full images, (B) raindrop patches, (C) error maps vs. ground truth.
 PGSG removes the drops like the retrained model, but its residual errors stay confined to the drop regions.*
 
