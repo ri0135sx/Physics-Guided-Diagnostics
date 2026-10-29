@@ -36,6 +36,8 @@ def main():
     p.add_argument("--input", required=True)
     p.add_argument("--out_dir", default="outputs")
     p.add_argument("--tau", type=float, help="override the architecture default")
+    p.add_argument("--precision", choices=["fp32", "fp16"], default="fp32",
+                   help="fp32: paper setting (24 GB GPU); fp16: for 12 GB GPUs")
     args = p.parse_args()
 
     cfg = dict(GATING_CONFIGS[args.arch])
@@ -49,8 +51,8 @@ def main():
     img = cv2.cvtColor(cv2.imread(args.input), cv2.COLOR_BGR2RGB)
     x = TF.to_tensor(img).unsqueeze(0).cuda()
     with torch.no_grad():
-        y_origin = predict(m_origin, x)
-        output, alpha, risk = gater(predict_tta(m_retrain, x), y_origin)
+        y_origin = predict(m_origin, x, args.precision)
+        output, alpha, risk = gater(predict_tta(m_retrain, x, args.precision), y_origin)
 
     os.makedirs(args.out_dir, exist_ok=True)
     stem = os.path.splitext(os.path.basename(args.input))[0]

@@ -121,48 +121,52 @@ column (stage 1 → stage 3):
 
 PGSG still outperforms Retrained + TTA, so the paper's conclusion is unchanged.
 With the original script's gating, this code reproduces the paper's per-image
-values for NAFNet, HINet, PReNet and MPRNet (stage 1) to within 0.001 dB.
-Restormer could not be re-checked at full resolution on a 12 GB GPU.
+values for NAFNet, HINet, PReNet and MPRNet (stage 1) to within 0.001 dB in
+fp32. For Restormer, run on a 12 GB GPU with `--precision fp16` (see
+[Hardware](#hardware)), the Original, Retrained and Retrained + TTA outputs match
+the paper's values to within 0.05 dB / 0.001 SSIM.
 
 ### Ablation: paper vs. implementation choices
 
 30 test images (10 per lens curvature), five architectures. Each variant changes
 one item relative to the original script, and $\tau$ is swept over
-{0.005, …, 0.3}. Two summaries are shown: the best single $\tau$ shared by all
-five architectures, and the best $\tau$ chosen per architecture.
+{0.005, …, 0.3}. Two summaries are shown: the single $\tau$ shared by all five
+architectures that maximizes mean PSNR, and the PSNR-optimal $\tau$ chosen per
+architecture.
 *Clean SSIM* is SSIM restricted to pixels away from raindrops (|input − GT| ≤ 10, dilated by 15 px).
-Rows are means over the five architectures; Retrained + TTA reaches 26.62 dB / 0.924 SSIM / 0.936 clean SSIM.
+Rows are means over the five architectures; Retrained + TTA reaches 26.31 dB / 0.920 SSIM / 0.932 clean SSIM.
 
 | Variant | shared τ | PSNR | SSIM | clean SSIM | per-arch τ: PSNR | SSIM | clean SSIM |
 |---|---|---|---|---|---|---|---|
-| Original script (diff, max-norm after veto, dilate + blur, μ) | 0.20 | 27.39 | 0.954 | 0.975 | 27.66 | 0.957 | 0.977 |
-| + Sobel | 0.30 | 27.66 | 0.958 | 0.981 | 27.86 | 0.958 | 0.979 |
-| + Eq. 8 normalization | 0.20 | 27.40 | 0.956 | 0.977 | 27.74 | 0.958 | 0.980 |
-| + blur only (no dilation) | 0.07 | 28.09 | 0.954 | 0.978 | 28.54 | 0.959 | 0.984 |
-| + no smoothing | 0.30 | 26.82 | 0.957 | 0.985 | 27.29 | 0.949 | 0.975 |
-| + single prediction in Eq. 10 | 0.30 | 27.04 | 0.957 | 0.980 | 27.22 | 0.956 | 0.978 |
-| Paper, literal (Sobel, Eq. 8, no smoothing, $f_\text{retrain}$) | 0.30 | 26.95 | 0.959 | 0.986 | 27.28 | 0.952 | 0.978 |
-| **This repository** (Sobel, Eq. 8, blur only, μ) | **0.07** | **28.48** | 0.956 | 0.979 | **28.92** | **0.961** | **0.986** |
+| Original script (diff, max-norm after veto, dilate + blur, μ) | 0.20 | 27.06 | 0.950 | 0.971 | 27.33 | 0.953 | 0.974 |
+| + Sobel | 0.30 | 27.32 | 0.955 | 0.977 | 27.52 | 0.955 | 0.975 |
+| + Eq. 8 normalization | 0.20 | 27.08 | 0.952 | 0.973 | 27.43 | 0.956 | 0.977 |
+| + blur only (no dilation) | 0.10 | 27.85 | 0.954 | 0.979 | 28.42 | 0.958 | 0.983 |
+| + no smoothing | 0.30 | 26.60 | 0.955 | 0.982 | 27.07 | 0.947 | 0.973 |
+| + single prediction in Eq. 10 | 0.30 | 26.78 | 0.953 | 0.977 | 26.95 | 0.953 | 0.974 |
+| Paper, literal (Sobel, Eq. 8, no smoothing, $f_\text{retrain}$) | 0.30 | 26.77 | 0.957 | 0.984 | 27.10 | 0.950 | 0.976 |
+| **This repository** (Sobel, Eq. 8, blur only, μ) | **0.10** | **28.22** | 0.955 | 0.980 | **28.80** | **0.961** | **0.985** |
 
-With the shared $\tau=0.07$, this repository's gating improves on
-Retrained + TTA for every architecture, in both PSNR and SSIM, with
-p < 0.001 (Wilcoxon, N = 30):
+The PSNR-vs-$\tau$ curve of this repository's gating is flat between 0.07
+(28.21 dB) and 0.10 (28.22 dB); larger $\tau$ trades PSNR for SSIM (0.3: 27.70 dB / 0.962).
+With the shared default $\tau=0.10$ (N = 30, Wilcoxon vs. Retrained + TTA):
 
-| Model | Retrained + TTA | PGSG (this repo) | Original |
-|---|---|---|---|
-| HINet     | 25.15 / 0.885 | 27.48 / 0.946 | 28.04 / 0.968 |
-| MPRNet    | 28.03 / 0.932 | 31.79 / 0.965 | 27.84 / 0.963 |
-| NAFNet    | 27.81 / 0.947 | 28.81 / 0.963 | 27.62 / 0.964 |
-| PReNet    | 27.33 / 0.934 | 27.86 / 0.955 | 24.29 / 0.961 |
-| Restormer | 24.78 / 0.922 | 26.47 / 0.948 | 27.93 / 0.970 |
+| Model | Retrained + TTA | PGSG (this repo) | Original | p (PSNR) | p (SSIM) |
+|---|---|---|---|---|---|
+| HINet     | 25.15 / 0.885 | 27.77 / 0.951 | 28.04 / 0.968 | 1.9e-9 | 1.9e-9 |
+| MPRNet    | 28.03 / 0.932 | 31.39 / 0.965 | 27.84 / 0.963 | 1.9e-9 | 1.9e-9 |
+| NAFNet    | 27.81 / 0.947 | 28.64 / 0.963 | 27.62 / 0.964 | 0.020  | 1.9e-9 |
+| PReNet    | 27.33 / 0.934 | 27.70 / 0.957 | 24.29 / 0.961 | 8.0e-6 | 1.9e-9 |
+| Restormer | 23.26 / 0.903 | 25.61 / 0.940 | 27.92 / 0.969 | 1.9e-9 | 1.9e-9 |
+
+PGSG improves on Retrained + TTA for every architecture. The SSIM gains are
+significant at p < 0.001 for all five, and the PSNR gains for all except NAFNet
+(p = 0.02).
 
 $\tau$ was selected on these same 30 images, just as the paper's thresholds
 were chosen by sensitivity analysis on the test set. The numbers therefore show
-how the design choices compare, not held-out performance. Restormer was run
-with tiled inference (12 GB GPU), so its absolute values differ from Table 1.
-
-Restormer needs a GPU with more than 12 GB of memory for full-image inference.
-On smaller GPUs the code falls back to 512-px tiles, which changes the results.
+how the design choices compare, not held-out performance. Restormer was run with
+`--precision fp16`, and the other models in fp32.
 
 ## Setup
 
@@ -175,6 +179,23 @@ pip install -r requirements.txt
 The five architectures are loaded from their official repositories, pinned as
 submodules in `third_party/`. Run `git submodule update --init` if you cloned
 without `--recursive`.
+
+### Hardware
+
+The paper's experiments ran on an RTX 4090 (24 GB) in fp32, the default here.
+At 1080p, full-image Restormer inference needs more than 12 GB in fp32. On
+12 GB GPUs (e.g. RTX 3080 Ti), pass `--precision fp16` to `evaluate.py` or
+`run_pgsg.py`: inference stays full-image under fp16 autocast (about 9.4 GB
+peak for Restormer), and results stay within 0.05 dB of fp32.
+
+| GPU memory | Option |
+|---|---|
+| 24 GB (paper: RTX 4090) | default (`--precision fp32`) |
+| 12 GB | `--precision fp16` |
+
+If even that runs out of memory, the code falls back to 512-px tiles and warns.
+Tiling changes the output of Restormer, whose attention is computed over the
+whole image.
 
 ### Checkpoints
 
@@ -202,6 +223,7 @@ Benchmark all architectures on paired data (`Input_*.png` / `Target_*.png`):
 
 ```bash
 python scripts/evaluate.py --data_dir <test_dir> --weights_dir weights --out_dir results
+# on a 12 GB GPU: add --precision fp16
 python scripts/significance.py results/per_image_metrics.csv
 ```
 

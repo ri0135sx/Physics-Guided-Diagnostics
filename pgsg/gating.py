@@ -51,7 +51,7 @@ class PhysicsGuidedSafetyGater:
         protection: structure-suppression sensitivity (lambda in Eq. 7).
     """
 
-    def __init__(self, tau=0.07, gain=1000.0, protection=15.0):
+    def __init__(self, tau=0.10, gain=1000.0, protection=15.0):
         self.tau = tau
         self.gain = gain
         self.protection = protection

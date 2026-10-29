@@ -2,7 +2,7 @@
 #   tau        : threshold on the min-max normalized risk; shared by all architectures
 #   gain       : sigmoid sharpness (gamma)
 #   protection : structure-suppression sensitivity (lambda)
-TAU = 0.07
+TAU = 0.10
 
 GATING_CONFIGS = {
     "NAFNet":    {"tau": TAU, "gain": 1000.0, "protection": 20.0},

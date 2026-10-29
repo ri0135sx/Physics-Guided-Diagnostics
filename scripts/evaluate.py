@@ -34,7 +34,7 @@ def metrics(t, target_rgb):
     return psnr, ssim
 
 
-def evaluate_arch(arch, files, weights_dir):
+def evaluate_arch(arch, files, weights_dir, precision):
     origin_name, retrained_name = WEIGHTS[arch]
     m_origin = load_model(arch, os.path.join(weights_dir, origin_name))
     m_retrain = load_model(arch, os.path.join(weights_dir, retrained_name))
@@ -47,8 +47,8 @@ def evaluate_arch(arch, files, weights_dir):
         x = TF.to_tensor(img).unsqueeze(0).cuda()
 
         with torch.no_grad():
-            y_origin = predict(m_origin, x)
-            tta = predict_tta(m_retrain, x)
+            y_origin = predict(m_origin, x, precision)
+            tta = predict_tta(m_retrain, x, precision)
             y_mean = torch.stack(tta).mean(dim=0)
             y_pgsg, alpha, _ = gater(tta, y_origin)
 
@@ -71,6 +71,8 @@ def main():
     p.add_argument("--out_dir", default="results")
     p.add_argument("--archs", nargs="+", default=ARCHS, choices=ARCHS)
     p.add_argument("--limit", type=int, help="evaluate only the first N images")
+    p.add_argument("--precision", choices=["fp32", "fp16"], default="fp32",
+                   help="fp32: paper setting (24 GB GPU); fp16: for 12 GB GPUs")
     args = p.parse_args()
 
     files = sorted(glob.glob(os.path.join(args.data_dir, "Input_*.png")))[: args.limit]
@@ -79,7 +81,7 @@ def main():
 
     rows = []
     for arch in args.archs:
-        rows += evaluate_arch(arch, files, args.weights_dir)
+        rows += evaluate_arch(arch, files, args.weights_dir, args.precision)
 
     os.makedirs(args.out_dir, exist_ok=True)
     df = pd.DataFrame(rows)
