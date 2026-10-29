@@ -1,0 +1,15 @@
+[submodule "third_party/HINet"]
+	path = third_party/HINet
+	url = https://github.com/megvii-model/HINet.git
+[submodule "third_party/MPRNet"]
+	path = third_party/MPRNet
+	url = https://github.com/swz30/MPRNet.git
+[submodule "third_party/NAFNet"]
+	path = third_party/NAFNet
+	url = https://github.com/megvii-research/NAFNet.git
+[submodule "third_party/PReNet"]
+	path = third_party/PReNet
+	url = https://github.com/csdwren/PReNet.git
+[submodule "third_party/Restormer"]
+	path = third_party/Restormer
+	url = https://github.com/swz30/Restormer.git

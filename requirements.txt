@@ -1,0 +1,9 @@
+torch>=2.0
+torchvision
+numpy
+opencv-python
+scikit-image
+scipy
+pandas
+tqdm
+einops        # Restormer
